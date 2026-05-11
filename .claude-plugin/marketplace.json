@@ -1,0 +1,13 @@
+{
+  "name": "ank-skills",
+  "owner": {
+    "name": "K N Anantha Nandanan"
+  },
+  "plugins": [
+    {
+      "name": "ank",
+      "source": "./",
+      "description": "ANK Skills — currently: /review-board (story-paced HTML walkthroughs of finished features)."
+    }
+  ]
+}

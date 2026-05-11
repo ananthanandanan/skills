@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>T-05 Walkthrough — Agent loop + Harness/Session API</title>
+<style>
+  :root {
+    --bg: #0e1117;
+    --panel: #161b22;
+    --panel-2: #1c232c;
+    --border: #2a313c;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #79c0ff;
+    --accent-2: #a5d6ff;
+    --good: #56d364;
+    --warn: #d29922;
+    --bad:  #f85149;
+    --code-bg: #0b0f14;
+    --tag-bg: #1f2630;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 15px; line-height: 1.55;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+  }
+  code { background: var(--tag-bg); padding: 1px 5px; border-radius: 4px; }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border);
+    padding: 14px 16px; border-radius: 8px; overflow-x: auto;
+    line-height: 1.45;
+  }
+  pre code { background: transparent; padding: 0; }
+
+  /* Layout */
+  .layout { display: flex; min-height: 100vh; }
+  nav.sidebar {
+    position: sticky; top: 0; align-self: flex-start;
+    width: 280px; height: 100vh; overflow-y: auto;
+    background: var(--panel); border-right: 1px solid var(--border);
+    padding: 28px 18px;
+  }
+  nav.sidebar .brand { font-weight: 600; font-size: 15px; margin-bottom: 4px; color: var(--accent-2); }
+  nav.sidebar .subtitle { font-size: 12px; color: var(--muted); margin-bottom: 22px; }
+  nav.sidebar ol { list-style: none; padding: 0; margin: 0; counter-reset: section; }
+  nav.sidebar ol li { counter-increment: section; margin: 2px 0; }
+  nav.sidebar ol li a {
+    display: block; padding: 7px 10px; border-radius: 6px;
+    color: var(--text); font-size: 13px;
+    border-left: 2px solid transparent;
+  }
+  nav.sidebar ol li a::before {
+    content: counter(section, decimal-leading-zero) "  ";
+    color: var(--muted); font-variant-numeric: tabular-nums;
+  }
+  nav.sidebar ol li a:hover { background: var(--panel-2); text-decoration: none; }
+  nav.sidebar ol li a.active {
+    background: var(--panel-2); border-left-color: var(--accent);
+    color: var(--accent-2);
+  }
+
+  main { flex: 1; padding: 40px 56px 120px; max-width: 980px; }
+  header.page-header { margin-bottom: 28px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+  header.page-header h1 { margin: 0 0 6px; font-size: 26px; }
+  header.page-header .meta { color: var(--muted); font-size: 13px; }
+  header.page-header .meta span + span::before { content: " · "; color: var(--border); }
+
+  section.story-section {
+    padding: 38px 0; border-bottom: 1px solid var(--border);
+  }
+  section.story-section:last-of-type { border-bottom: none; }
+  section.story-section h2 {
+    margin: 0 0 6px; font-size: 22px; color: var(--accent-2);
+  }
+  section.story-section .section-tag {
+    display: inline-block; font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 18px;
+  }
+  section.story-section h3 {
+    margin: 28px 0 10px; font-size: 16px; color: var(--text);
+  }
+  section.story-section p { margin: 10px 0; }
+
+  /* Pillboxes */
+  .pillrow { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
+  .pill {
+    display: inline-block; padding: 2px 9px; border-radius: 999px;
+    background: var(--tag-bg); border: 1px solid var(--border);
+    font-size: 11px; color: var(--muted);
+  }
+  .pill.good { color: var(--good); border-color: rgba(86,211,100,0.35); }
+  .pill.warn { color: var(--warn); border-color: rgba(210,153,34,0.35); }
+  .pill.bad  { color: var(--bad);  border-color: rgba(248,81,73,0.35); }
+  .pill.accent { color: var(--accent-2); border-color: rgba(121,192,255,0.35); }
+
+  /* Why / Decision blocks */
+  .callout {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px; border-radius: 6px;
+    margin: 14px 0;
+  }
+  .callout.why    { border-left-color: var(--accent); }
+  .callout.tradeoff { border-left-color: var(--warn); }
+  .callout.deferred { border-left-color: var(--muted); }
+  .callout strong { color: var(--accent-2); }
+  .callout.tradeoff strong { color: var(--warn); }
+  .callout.deferred strong { color: var(--muted); }
+
+  /* Tables */
+  table {
+    width: 100%; border-collapse: collapse; margin: 14px 0;
+    font-size: 13px;
+  }
+  th, td {
+    text-align: left; padding: 9px 12px;
+    border-bottom: 1px solid var(--border); vertical-align: top;
+  }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+  td code { white-space: nowrap; }
+
+  /* Diagrams (ASCII-ish) */
+  .diagram {
+    background: var(--code-bg); border: 1px solid var(--border);
+    padding: 18px; border-radius: 8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px; line-height: 1.5; color: var(--accent-2);
+    overflow-x: auto; white-space: pre;
+  }
+
+  .file-ref {
+    display: inline-block; font-size: 12px; color: var(--muted);
+    background: var(--tag-bg); padding: 2px 8px; border-radius: 4px;
+    margin-right: 6px;
+  }
+
+  ul.compact { margin: 6px 0; padding-left: 22px; }
+  ul.compact li { margin: 4px 0; }
+
+  .toc-toggle { display: none; }
+
+  @media (max-width: 880px) {
+    .layout { flex-direction: column; }
+    nav.sidebar { position: relative; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    main { padding: 24px 20px 80px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="brand">Reigner / T-05</div>
+    <div class="subtitle">Agent loop + Harness/Session API</div>
+    <ol id="toc">
+      <li><a href="#context">The starting point</a></li>
+      <li><a href="#scope">What this PR sets out to do</a></li>
+      <li><a href="#shape">The shape of the loop</a></li>
+      <li><a href="#harness-session">Harness vs. Session</a></li>
+      <li><a href="#cache">G9 — the tool-result cache</a></li>
+      <li><a href="#truncation">G2 — bounded outputs</a></li>
+      <li><a href="#pseudo-tools">Pseudo-tools dispatch</a></li>
+      <li><a href="#parallel">G11 — parallel reads</a></li>
+      <li><a href="#guardrails">Guardrail status table</a></li>
+      <li><a href="#deferred">What was deliberately deferred</a></li>
+      <li><a href="#tests">How it was tested</a></li>
+      <li><a href="#review">Reviewer's checklist</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="page-header">
+      <h1>Agent loop + Harness / Session API</h1>
+      <div class="meta">
+        <span>T-05 · issue #5 · PR #39</span>
+        <span>branch <code>ananthanandanan/t-05-feat-agent-loop</code></span>
+        <span>commit <code>65e7d64</code></span>
+      </div>
+      <div class="pillrow" style="margin-top:14px;">
+        <span class="pill accent">harness</span>
+        <span class="pill accent">session</span>
+        <span class="pill accent">async loop</span>
+        <span class="pill">G2 stub</span>
+        <span class="pill">G9 stub</span>
+        <span class="pill good">G11 implemented</span>
+      </div>
+    </header>
+
+    <!-- 1 -->
+    <section class="story-section" id="context">
+      <span class="section-tag">Where we were</span>
+      <h2>The starting point</h2>
+      <p>
+        Before this PR, the harness package had its passive pieces in place:
+        <code>events.py</code> (the typed event protocol from T-02),
+        <code>state.py</code> (<code>AgentState</code> from T-03), and the
+        model adapter base classes. What was missing was the active piece —
+        the thing that actually <em>turns the crank</em>: model call → tool
+        calls → tool results → back to the model, until the model says it's done.
+      </p>
+      <p>
+        T-05 fills that gap with three things: an <code>async</code> generator
+        loop, a public <code>Harness</code> + <code>Session</code> facade, and
+        the two minimum support modules the loop needs to work today
+        (<code>cache.py</code>, <code>truncation.py</code>) as honest stubs.
+      </p>
+      <div class="callout why">
+        <strong>Why now:</strong> nothing else can be built end-to-end without a
+        loop. Tools (T-07), guardrails (T-06/T-08), CLI (later), and eval all
+        need <em>something</em> to drive them. T-05 is the smallest thing that
+        unblocks all of them while preserving SPEC §5.3's "intentionally legible"
+        constraint.
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="story-section" id="scope">
+      <span class="section-tag">What changed</span>
+      <h2>What this PR sets out to do</h2>
+      <p>Five new files under <code>reigner/harness/</code>, plus three test files:</p>
+      <table>
+        <thead><tr><th>File</th><th>Role</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><code>harness/loop.py</code></td><td>The <code>async def run_loop</code> generator</td><td><span class="pill good">implemented</span></td></tr>
+          <tr><td><code>harness/agent.py</code></td><td>Public <code>Harness</code> + <code>Session</code></td><td><span class="pill good">implemented</span></td></tr>
+          <tr><td><code>harness/cache.py</code></td><td>G9 — per-session tool-result cache</td><td><span class="pill warn">stub (functional)</span></td></tr>
+          <tr><td><code>harness/truncation.py</code></td><td>G2 — per-tool result truncation</td><td><span class="pill warn">stub (functional)</span></td></tr>
+          <tr><td><code>tests/harness/test_loop.py</code></td><td>27 loop tests with FakeAdapter / RecordingTool</td><td><span class="pill good">passing</span></td></tr>
+          <tr><td><code>tests/harness/test_cache.py</code></td><td>5 cache tests</td><td><span class="pill good">passing</span></td></tr>
+          <tr><td><code>tests/harness/test_truncation.py</code></td><td>5 truncation tests</td><td><span class="pill good">passing</span></td></tr>
+        </tbody>
+      </table>
+      <p>
+        The word "stub" here doesn't mean "pretend" — it means
+        <em>functional but minimal</em>. The cache works, the truncator works.
+        They just don't yet have the ergonomics (TTLs, structure-aware budgets)
+        that the richer versions in later tasks will.
+      </p>
+    </section>
+
+    <!-- 3 -->
+    <section class="story-section" id="shape">
+      <span class="section-tag">Architecture</span>
+      <h2>The shape of the loop</h2>
+      <p>
+        SPEC §5.3 says the loop should be ~300 lines of straight-line code that
+        a reader can take in at a sitting. The implementation is one
+        <code>async</code> generator function with three explicit numbered
+        suppressions for ruff (<code>C901</code>, <code>PLR0912</code>,
+        <code>PLR0915</code>) and a comment that says, in effect, "yes, on
+        purpose."
+      </p>
+      <div class="diagram">
+                ┌──────────────────────────────────────┐
+                │   Session.run_stream(query)          │
+                │   appends user Turn, calls run_loop  │
+                └──────────────┬───────────────────────┘
+                               ▼
+              ┌────────────────────────────────────────┐
+              │            run_loop(state)             │
+              │                                        │
+   ┌──────────┤  while not state.done:                 │
+   │          │    state.refresh_context()  (G6/G7)    │
+   │          │    state.context_pressure() (G5/G10)   │
+   │          │    prompt = state.build_prompt()  (G1) │
+   │          │    action = await adapter.call(prompt) │
+   │          │                                        │
+   │          │    ┌─ final_answer? ─► FinalAnswerEvt  │
+   │          │    ├─ no progress?  ─► FinalAnswerEvt  │
+   │          │    └─ tool_calls    ─► dispatch ──┐    │
+   │          │                                   │    │
+   │          │  for tc in action.tool_calls:     │    │
+   │          │    if pseudo  → _dispatch_pseudo  │    │
+   │          │    else       → queue real        │    │
+   │          │                                   │    │
+   │          │  flush real batch:                │    │
+   │          │    parallel? gather : serial      │ G11│
+   │          │      ↳ cache check (G9)           │    │
+   │          │      ↳ tool.run(args)             │    │
+   │          │      ↳ truncate_for_tool (G2)     │    │
+   │          │      ↳ emit ToolResultEvent       │    │
+   │          │                                   │    │
+   │          │  state.iterations += 1            │    │
+   │          │  guard: max_iters / max_errors    │    │
+   └──────────┘                                   │    │
+              └─────────────── yield Event ◄──────┘    │
+                                                       │
+              caller iterates → stops when iterator    │
+              completes; cancellation = stop the loop. ┘
+      </div>
+      <div class="callout why">
+        <strong>Why a generator and not a callback registry:</strong> every
+        <code>yield</code> is a checkpoint. The caller controls cadence; the loop
+        owns no background tasks. Cancelling the iterator cancels the loop
+        cleanly — there is nothing to clean up because there is nothing in
+        flight that isn't tied to the current <code>await</code>.
+      </div>
+      <div class="callout tradeoff">
+        <strong>Tradeoff accepted:</strong> the function is long. Splitting it
+        into <code>_handle_final()</code>, <code>_handle_calls()</code>, etc.
+        would shrink each piece but hide the control flow behind helper names.
+        SPEC §5.3 explicitly chooses readability over decomposition here.
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section class="story-section" id="harness-session">
+      <span class="section-tag">Public API</span>
+      <h2>Harness vs. Session — the two-layer split</h2>
+      <p>
+        The public surface is two objects with a sharp responsibility line.
+      </p>
+      <table>
+        <thead><tr><th></th><th><code>Harness</code></th><th><code>Session</code></th></tr></thead>
+        <tbody>
+          <tr><td>Lifetime</td><td>Built once, reused</td><td>One conversation</td></tr>
+          <tr><td>Mutability</td><td>Immutable (frozen-ish dataclass)</td><td>Mutable; mutates <code>AgentState</code></td></tr>
+          <tr><td>Owns</td><td>Adapter, tool list, role, budget knobs</td><td><code>AgentState</code>, <code>ToolResultCache</code>, event log</td></tr>
+          <tr><td>Spawns</td><td><code>session() → Session</code></td><td><code>fork() → Session</code></td></tr>
+        </tbody>
+      </table>
+      <p>
+        <code>Session.run_stream(query)</code> is the streaming entry point;
+        <code>Session.run(query)</code> is a one-line consumer that drains the
+        stream and returns the <code>FinalAnswerEvent</code>. Same loop under
+        both — no duplication.
+      </p>
+
+      <h3>Per-query iteration budget</h3>
+      <p>
+        Inside <code>run_loop</code>, the very first thing that happens is
+        <code>state.iterations = 0</code>. That makes <code>max_iterations</code>
+        a <em>per-query</em> budget, not a per-session one.
+      </p>
+      <div class="callout why">
+        <strong>Why:</strong> a long-lived session can hold dozens of turns. If
+        the budget were cumulative, a healthy session would hit the wall mid-way
+        through a perfectly normal conversation. Per-query is the unit users
+        actually reason about ("don't loop more than 25 times on this question").
+      </div>
+
+      <h3>Forking</h3>
+      <p>
+        <code>Session.fork(at_turn=-1)</code> returns a new <code>Session</code>
+        with a fresh cache and event log, <code>parent_id</code> pointing back.
+        This is the foundation T-23 needs for A/B/C comparison of
+        REIGNER.md / tool / model variants without re-running from scratch
+        (SPEC §11).
+      </p>
+    </section>
+
+    <!-- 5 -->
+    <section class="story-section" id="cache">
+      <span class="section-tag">Guardrail G9</span>
+      <h2>The tool-result cache</h2>
+      <p>
+        <span class="file-ref">harness/cache.py</span>
+        Every <code>Session</code> owns one <code>ToolResultCache</code>. The
+        loop consults it only for tools whose <code>readonly</code> flag is true,
+        keyed on <code>(tool_name, args)</code>:
+      </p>
+<pre><code>@staticmethod
+def _key(tool_name: str, args: dict[str, Any]) -> str:
+    return f"{tool_name}:{json.dumps(args, sort_keys=True,
+                                     separators=(',', ':'),
+                                     default=str)}"</code></pre>
+      <div class="callout why">
+        <strong>Why <code>sort_keys=True</code>:</strong> the model may issue
+        the same logical call with arg keys in different orders. Sorted JSON +
+        tight separators give a deterministic string key so
+        <code>{"path":"a","offset":0}</code> and <code>{"offset":0,"path":"a"}</code>
+        hit the same entry. Verified by <code>test_args_order_independent</code>.
+      </div>
+      <h3>Cache stores untruncated results</h3>
+      <p>
+        Important detail: the cache stores the <em>raw</em> tool result and
+        truncation runs on the way out. A model that gets a result twice — once
+        fresh, once cached — sees the same shape both times.
+      </p>
+      <h3>Errors are not memoized</h3>
+      <p>
+        <code>_execute_one</code> only writes to the cache on success. A
+        transient failure shouldn't poison subsequent calls.
+      </p>
+    </section>
+
+    <!-- 6 -->
+    <section class="story-section" id="truncation">
+      <span class="section-tag">Guardrail G2</span>
+      <h2>Bounded outputs</h2>
+      <p>
+        <span class="file-ref">harness/truncation.py</span>
+        PRINCIPLES §3 says: <em>when we truncate, the returned shape must say so
+        explicitly so the model can ask for more.</em> The stub honors that with
+        a JSON-aware, char-budget truncator.
+      </p>
+      <table>
+        <thead><tr><th>Result type</th><th>Strategy</th><th>Marker added</th></tr></thead>
+        <tbody>
+          <tr><td><code>str</code></td><td>Hard slice with trailing suffix</td><td><code>"... [truncated]"</code></td></tr>
+          <tr><td><code>list</code></td><td>Longest prefix that fits, wrapped in dict</td><td><code>_truncated</code>, <code>_original_count</code></td></tr>
+          <tr><td><code>dict</code></td><td>Largest insertion-order prefix that fits</td><td><code>_truncated</code>, <code>_original_keys</code></td></tr>
+          <tr><td>other</td><td>Stringify + slice</td><td><code>_truncated</code>, <code>_value</code></td></tr>
+        </tbody>
+      </table>
+      <h3>The bug worth calling out</h3>
+      <p>
+        First implementation of the list/dict branches checked the candidate
+        size <em>without</em> the marker fields, then added them at return time.
+        The result overshot the limit. Fix: include
+        <code>_original_count</code> / <code>_original_keys</code> in the
+        candidate dict the loop measures against.
+      </p>
+<pre><code>if isinstance(result, list):
+    kept: list[Any] = []
+    for item in result:
+        candidate = {
+            "items": [*kept, item],
+            "_truncated": True,
+            "_original_count": len(result),  # <-- counted in the budget
+        }
+        if _serialized_size(candidate) > char_limit:
+            break
+        kept.append(item)
+    return {"items": kept, "_truncated": True,
+            "_original_count": len(result)}, True</code></pre>
+      <div class="callout why">
+        <strong>Why JSON-serialized size:</strong> the budget is "what goes into
+        model context." That's the JSON form, not <code>len(repr(value))</code>.
+      </div>
+    </section>
+
+    <!-- 7 -->
+    <section class="story-section" id="pseudo-tools">
+      <span class="section-tag">Local control plane</span>
+      <h2>Pseudo-tools — dispatched inline, never to the wire</h2>
+      <p>
+        Four tool names are intercepted by the loop itself and never reach an
+        external service:
+      </p>
+      <div class="pillrow">
+        <span class="pill accent">save_note</span>
+        <span class="pill accent">request_clarification</span>
+        <span class="pill accent">stop</span>
+        <span class="pill accent">escalate_to_oracle</span>
+      </div>
+      <p>
+        They live in a single <code>frozenset</code> at the top of
+        <code>loop.py</code> and dispatch through one
+        <code>_dispatch_pseudo</code> function with one branch per name. SPEC
+        §6.4 explicitly wants this <em>not</em> behind a plugin registry — a
+        reader of the loop should see every special case in one place.
+      </p>
+      <table>
+        <thead><tr><th>Name</th><th>Effect</th><th>Terminal?</th></tr></thead>
+        <tbody>
+          <tr><td><code>save_note</code></td><td>Appends to <code>state.notes</code> (G8 scratchpad)</td><td>no</td></tr>
+          <tr><td><code>request_clarification</code></td><td>Emits <code>ClarificationEvent</code></td><td>yes</td></tr>
+          <tr><td><code>stop</code></td><td>Emits <code>FinalAnswerEvent(metadata={"stop": true})</code></td><td>yes</td></tr>
+          <tr><td><code>escalate_to_oracle</code></td><td>Emits <code>OracleEscalationEvent</code>, returns deferred-ack to model</td><td>no</td></tr>
+        </tbody>
+      </table>
+      <div class="callout deferred">
+        <strong>Deferred:</strong> <code>escalate_to_oracle</code> currently
+        emits the event but executes as a no-op. Real oracle wiring is in scope
+        for the model-routing task.
+      </div>
+    </section>
+
+    <!-- 8 -->
+    <section class="story-section" id="parallel">
+      <span class="section-tag">Guardrail G11</span>
+      <h2>Parallel reads — without breaking event order</h2>
+      <p>
+        When every real call this turn is <code>readonly=True</code>, the loop
+        runs them concurrently with <code>asyncio.gather</code>. But emission
+        order has to stay deterministic so callers (CLI, MCP) see the same
+        stream every time.
+      </p>
+      <p>The trick is two-phase emission inside <code>_run_real_calls</code>:</p>
+<pre><code># Phase 1: emit ALL ToolCallEvents in original order (no awaits).
+for tc in calls:
+    yield ToolCallEvent(...)
+
+# Phase 2: gather concurrently, but await once before any results stream.
+if parallel and len(calls) > 1:
+    results = await asyncio.gather(
+        *(_execute_one(tc, ...) for tc in calls)
+    )
+else:
+    results = [await _execute_one(tc, ...) for tc in calls]
+
+# Phase 3: emit results in the same order calls were issued.
+for tc, (raw, cache_hit, errored) in zip(calls, results, strict=True):
+    yield ToolResultEvent(...)</code></pre>
+      <div class="callout why">
+        <strong>Why this order:</strong> the model issued calls in a specific
+        order; the event stream should reflect that. Parallel execution is an
+        optimization, not a reordering primitive — observers should never see a
+        result before its call.
+      </div>
+
+      <h3>Mixed pseudo + real batches</h3>
+      <p>
+        If a turn includes both pseudo and real tool calls, the loop walks them
+        in the order the model issued them. When it hits a pseudo-tool, it
+        first <em>flushes</em> any queued real calls so emission stays stable.
+        Some pseudo-tools are terminal (<code>stop</code>,
+        <code>request_clarification</code>) — when one fires,
+        <code>terminate_after_calls</code> is set and any remaining queued real
+        calls are dropped (the model already decided to end).
+      </p>
+    </section>
+
+    <!-- 9 -->
+    <section class="story-section" id="guardrails">
+      <span class="section-tag">Coverage</span>
+      <h2>Guardrail status — what's live, what's stubbed, what's deferred</h2>
+      <table>
+        <thead><tr><th>ID</th><th>What it does</th><th>Status in T-05</th><th>Lands in</th></tr></thead>
+        <tbody>
+          <tr><td>G1</td><td>Stable / dynamic prompt boundary (cache-friendly)</td><td><span class="pill good">live</span> via <code>state.build_prompt()</code></td><td>T-03</td></tr>
+          <tr><td>G2</td><td>Per-tool result truncation</td><td><span class="pill warn">stub</span> char-based, JSON-aware</td><td>richer with T-09</td></tr>
+          <tr><td>G3</td><td>Iteration nudges</td><td><span class="pill bad">hook only</span> — bails instead of nudging</td><td>T-06 / T-08</td></tr>
+          <tr><td>G4</td><td>Consecutive-error nudge</td><td><span class="pill bad">hook only</span> — bails on threshold</td><td>T-06 / T-08</td></tr>
+          <tr><td>G5</td><td>History-window compaction</td><td><span class="pill bad">pressure read, no event</span></td><td>T-08</td></tr>
+          <tr><td>G6</td><td>Dynamic context refresh</td><td><span class="pill good">live</span> via <code>state.refresh_context()</code></td><td>T-03</td></tr>
+          <tr><td>G7</td><td>Dynamic-context boundary discipline</td><td><span class="pill good">live</span></td><td>T-03</td></tr>
+          <tr><td>G8</td><td>Scratchpad (<code>save_note</code>)</td><td><span class="pill good">live</span></td><td>this PR</td></tr>
+          <tr><td>G9</td><td>Per-session tool-result cache</td><td><span class="pill warn">stub</span> in-memory dict</td><td>this PR</td></tr>
+          <tr><td>G10</td><td>Progressive compaction</td><td><span class="pill bad">deferred</span></td><td>T-08</td></tr>
+          <tr><td>G11</td><td>Parallel readonly tool calls</td><td><span class="pill good">live</span> via <code>asyncio.gather</code></td><td>this PR</td></tr>
+        </tbody>
+      </table>
+      <div class="callout why">
+        <strong>Why bail instead of nudge for G3/G4:</strong> a half-built nudge
+        is worse than no nudge — it would shape the model's behavior in ways
+        we'd then have to undo. The loop instead bails out cleanly with an
+        <code>ErrorEvent</code> so the integration boundary is honest. T-08
+        replaces the bail with a real injected nudge.
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section class="story-section" id="deferred">
+      <span class="section-tag">Out of scope, on purpose</span>
+      <h2>What was deliberately deferred</h2>
+      <p>Five things you'll find as <code>NotImplementedError</code> stubs:</p>
+      <ul class="compact">
+        <li><code>Harness.from_config(path)</code> → waits on the
+            <code>reigner.yaml</code> loader (T-26).</li>
+        <li><code>Session.steer(message, mode)</code> → signature in place;
+            wiring lands with T-06.</li>
+        <li><code>Session.save()</code> / <code>Session.load()</code> → wait on
+            the JSONL session store (T-23).</li>
+        <li>Profile filtering (<code>"read_only"</code>, <code>"eval"</code>)
+            → needs the tool registry (T-07); only <code>"full"</code> works today.</li>
+        <li>Real oracle execution inside <code>escalate_to_oracle</code> → emits
+            event, executes no-op.</li>
+      </ul>
+      <p>
+        Each stub has the public signature in place so consumers (later tasks,
+        eval scripts, CLI) can already type-check against the final shape.
+      </p>
+    </section>
+
+    <!-- 11 -->
+    <section class="story-section" id="tests">
+      <span class="section-tag">Verification</span>
+      <h2>How it was tested</h2>
+      <p>
+        37 new tests, all passing under <code>uv run pytest</code>:
+      </p>
+      <ul class="compact">
+        <li><strong>5 cache tests</strong> — miss/hit, arg-order independence, distinct entries, clear.</li>
+        <li><strong>5 truncation tests</strong> — pass-through, string slicing, list/dict prefix + markers, zero-limit disable.</li>
+        <li><strong>27 loop tests</strong> built around two test doubles:
+          <ul class="compact">
+            <li><code>FakeAdapter</code> — replays a scripted list of <code>ModelAction</code>s. No network, deterministic.</li>
+            <li><code>RecordingTool</code> — captures every call so tests can assert on args, parallel ordering, cache hits.</li>
+          </ul>
+        </li>
+      </ul>
+      <h3>What the loop tests actually cover</h3>
+      <table>
+        <thead><tr><th>Area</th><th>Examples</th></tr></thead>
+        <tbody>
+          <tr><td>Happy path</td><td>final answer, tool call → result → final, no-progress termination</td></tr>
+          <tr><td>Cache</td><td>second call hits cache, <code>cached=True</code> on event, untruncated stored / truncated emitted</td></tr>
+          <tr><td>Pseudo-tools</td><td>each of the four, including terminal vs. non-terminal</td></tr>
+          <tr><td>Errors</td><td>tool exception → <code>{"error": ...}</code> back to model; consecutive-error abort</td></tr>
+          <tr><td>Budgets</td><td><code>max_iterations</code> bail; per-tool char limit overrides</td></tr>
+          <tr><td>G11</td><td>parallel batch fires concurrently; mixed readonly/non-readonly stays serial</td></tr>
+          <tr><td>Forking</td><td>fork inherits history prefix, fresh cache + events, parent_id set</td></tr>
+          <tr><td>Determinism</td><td><code>seq</code> monotonic across all events even under parallel execution</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 12 -->
+    <section class="story-section" id="review">
+      <span class="section-tag">For the reviewer</span>
+      <h2>Reviewer's checklist</h2>
+      <p>If you're reviewing this branch, the highest-leverage things to verify:</p>
+      <ul class="compact">
+        <li>Read <code>loop.py</code> top-to-bottom in one sitting — that's the test of SPEC §5.3's "stays legible." If it doesn't, that's a finding.</li>
+        <li>Check that the guardrail comments at the top of <code>loop.py</code> match the actual hook points in the body.</li>
+        <li>Confirm event seq numbers are monotonic across the streaming + run-and-collect paths (<code>seq_start=len(self._events)</code> in <code>agent.py</code>).</li>
+        <li>Sanity-check the two-phase emission in <code>_run_real_calls</code> — calls all yielded before any await, results yielded in original order after gather.</li>
+        <li>Make sure no production path raises out of a tool. Tool exceptions become <code>{"error": "..."}</code> dicts the model can react to (<code>_execute_one</code>).</li>
+        <li>Verify <code>Session.fork</code> creates an independent cache + event log — sessions sharing a cache would silently leak across A/B comparisons.</li>
+        <li>Check the <code>NotImplementedError</code> stubs: the messages name the task that will land them, so future-readers know where to look.</li>
+      </ul>
+      <div class="callout why">
+        <strong>Mental model to carry into the review:</strong> this PR is
+        deliberately the <em>thinnest</em> loop that can run a real model
+        end-to-end without violating any of the 11 guardrail contracts. Where a
+        guardrail isn't fully implemented, the loop either delegates to an
+        existing module (G1/G6/G7) or bails honestly (G3/G4) rather than
+        faking it.
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  // Sidebar active-section highlighting.
+  const links = document.querySelectorAll('nav.sidebar a');
+  const sections = Array.from(links).map(a => document.querySelector(a.getAttribute('href')));
+  const setActive = () => {
+    const y = window.scrollY + 120;
+    let idx = 0;
+    sections.forEach((s, i) => { if (s && s.offsetTop <= y) idx = i; });
+    links.forEach((a, i) => a.classList.toggle('active', i === idx));
+  };
+  window.addEventListener('scroll', setActive, { passive: true });
+  setActive();
+</script>
+</body>
+</html>

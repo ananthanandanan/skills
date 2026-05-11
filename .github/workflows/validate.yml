@@ -1,0 +1,26 @@
+name: validate
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install pyyaml
+      - run: |
+          python - <<'PY'
+          import pathlib, yaml, sys
+          required = {"name", "description"}
+          fail = False
+          for p in pathlib.Path("skills").rglob("SKILL.md"):
+              text = p.read_text()
+              if not text.startswith("---"):
+                  print(f"::error file={p}::missing frontmatter"); fail = True; continue
+              fm = text.split("---", 2)[1]
+              data = yaml.safe_load(fm) or {}
+              missing = required - data.keys()
+              if missing:
+                  print(f"::error file={p}::missing fields: {missing}"); fail = True
+          sys.exit(1 if fail else 0)
+          PY
