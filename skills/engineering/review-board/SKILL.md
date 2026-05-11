@@ -23,7 +23,7 @@ allowed-tools:
 
 A single self-contained HTML file at `docs/review/<slug>.html` that a human reviewer can read top-to-bottom to understand a finished feature. Not a diff summary — GitHub already does that. The value is the **why** and the **shape**: what we were trying to do, the non-obvious decisions, the tradeoffs accepted, what was deferred, and what to spot-check.
 
-**Before generating, open the reference example at `examples/walkthrough-example.html`.** It is the visual + structural target — pattern-match against it. Copy its `<style>` block and scroll-spy `<script>` **verbatim** into the new document. Match its shape: sticky sidebar with numbered TOC, scroll-spy active highlighting, story-paced sections, Why / Tradeoff / Deferred callouts, status pills, ASCII diagrams in the architecture section. The example's content is Reigner-specific (task T-05) — *the structure, voice, and density carry over; the words do not*.
+**Before generating, open the reference example at `examples/walkthrough-example.html`.** It is the visual + structural target — pattern-match against it. Copy its `<style>` block and scroll-spy `<script>` **verbatim** into the new document. Match its shape: sticky sidebar with numbered TOC, scroll-spy active highlighting, story-paced sections, Why / Tradeoff / Deferred callouts, status pills, ASCII diagrams in the architecture section. The example's content describes one specific past feature — *the structure, voice, and density carry over; the words do not*.
 
 ## Inputs (two modes)
 
@@ -40,13 +40,20 @@ A single self-contained HTML file at `docs/review/<slug>.html` that a human revi
 
 ## Required interview
 
-Use `AskUserQuestion` for the things you can't infer from code. Skip any question whose answer is obvious from commit messages or the PR body — don't interrogate.
+Use `AskUserQuestion` for things you can't infer from code. Skip any question whose answer is obvious from commit messages, PR body, **or the current chat conversation**.
 
-- **Headline.** "In one sentence: what does this change do, and why?" → opening paragraph of section 1.
-- **Most non-obvious decision.** "What's the call here that another engineer wouldn't make by default?" → becomes a `callout.why`.
-- **Tradeoff accepted.** "What did you give up to make this work?" → becomes a `callout.tradeoff`.
-- **Deliberately deferred.** "What did you scope out on purpose?" → becomes the Deferred section and `callout.deferred` entries.
-- **Reviewer focus.** "What specifically should the reviewer scrutinize?" → becomes the Reviewer's checklist.
+**Pick the right mode before asking:**
+
+- **High-context mode** — if the chat that invoked this skill already contains strong signals for the answers (the user has been discussing this work with you turn-by-turn), do **not** issue a four-question interrogation. Instead, write your best read of all five answers and surface them as a single `AskUserQuestion` with mutually-exclusive options for the most contested call (usually the *non-obvious decision* or *tradeoff*), and note the other reads in the question's body. Let the user redirect rather than answer from scratch.
+- **Cold-start mode** — if you were invoked with little prior chat context, ask the full five questions below. One question at a time, with concrete option choices that make the user pick rather than free-type.
+
+**The five things to elicit (in either mode):**
+
+- **Headline.** One sentence: what does this change do, and why? → opens section 1.
+- **Most non-obvious decision.** What's the call another engineer wouldn't make by default? → becomes a `callout.why`.
+- **Tradeoff accepted.** What did you give up to make this work? → becomes a `callout.tradeoff`.
+- **Deliberately deferred.** What did you scope out on purpose? → becomes the Deferred section.
+- **Reviewer focus.** What should the reviewer scrutinize? → becomes the Reviewer's checklist.
 
 ## Required output sections (the story arc)
 
@@ -64,8 +71,9 @@ Adapt section *names* to the feature, but keep the arc:
 
 Write to `docs/review/<slug>.html`:
 
-- Branch mode: `<slug>` = current branch name with `/` replaced by `-` (e.g. `ananthanandanan/t-05-feat-agent-loop` → `ananthanandanan-t-05-feat-agent-loop`).
-- PR mode: `<slug>` = `pr-<number>`.
+- **PR mode:** `<slug>` = `pr-<number>`.
+- **Branch mode, feature branch** (current branch ≠ default branch): `<slug>` = current branch name with `/` replaced by `-` (e.g. `feature/new-checkout` → `feature-new-checkout`).
+- **Branch mode, on the default branch** (`main`/`master`, i.e. `collect_context.sh` reports `mode=single-head`): using the literal branch name would clobber the file on the next merge. Use `commit-<short-sha>` instead (e.g. `commit-a1b2c3d`).
 
 Create `docs/review/` if it doesn't exist.
 
@@ -79,9 +87,28 @@ Create `docs/review/` if it doesn't exist.
 - **Don't paste the full diff into the HTML.** The reviewer has GitHub for line-by-line.
 - **Don't generate a generic "this PR adds X" summary.** That's what the GitHub PR body is for. The walkthrough is for the why and the shape.
 
+## Self-check before declaring done
+
+After writing the HTML, run these checks. Fix anything that fails; don't tell the user the file is ready until they all pass.
+
+1. **Example-content leak grep.** The example file describes a specific unrelated feature. The new file must not retain its proper nouns, task IDs, or branded identifiers. Before drafting, skim the example and collect its distinctive terms (project name, task IDs, module names, custom class names — anything that wouldn't appear in *any* random codebase). After drafting, grep the new file for those terms and confirm none survive:
+   ```bash
+   grep -nE 'Term1|Term2|Term3' docs/review/<slug>.html | grep -v '<!--'
+   ```
+   Any hit that wasn't deliberately written for the current feature is a bug — re-edit.
+2. **Anchor consistency.** Every `<li><a href="#X">` in the sidebar must match a `<section id="X">` further down, and vice versa. Mismatches break the scroll-spy and the TOC links. Run:
+   ```bash
+   diff <(grep -oE 'href="#[a-z0-9-]+"' docs/review/<slug>.html | sort -u) \
+        <(grep -oE 'id="[a-z0-9-]+"' docs/review/<slug>.html | sort -u | sed 's/id=/href=#/' | sed 's/"/"#/' )
+   ```
+   (or just eyeball the two lists side by side.)
+3. **File-path honesty.** For every file path mentioned in the HTML, verify it exists. `ls` the ones you cited.
+4. **Status pill honesty.** Re-scan every `<span class="pill good|warn|bad">`. For each, confirm the underlying code actually matches that label. If you used `good` for "implemented", that file should actually be implemented — not stubbed.
+5. **Callout density.** Every `callout.why`, `callout.tradeoff`, and `callout.deferred` should have a real cause expressible in one sentence. If you can't, delete the callout.
+
 ## What NOT to do
 
 - Don't regenerate the doc on every commit. This is a finished-feature artifact, not CI output.
 - Don't add screenshots or external images.
-- Don't lift Reigner/T-05 prose from the example. The example is a structural reference, not a phrasing template.
+- Don't lift the example's project-specific prose verbatim. The example is a structural reference, not a phrasing template.
 - Don't include a TL;DR at the top. The first section ("Where we were") *is* the lede.

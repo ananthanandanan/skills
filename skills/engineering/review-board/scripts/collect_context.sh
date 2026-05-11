@@ -18,22 +18,42 @@ fi
 current="$(git rev-parse --abbrev-ref HEAD)"
 head_sha="$(git rev-parse --short HEAD)"
 
+# Detect "no diff range" cases: on the default branch, or no commits exist
+# beyond base. In those cases, treat HEAD itself as the scope.
+mode="range"
+if [ "$current" = "$base" ] || [ -z "$(git log "$base..HEAD" --oneline 2>/dev/null || true)" ]; then
+  mode="single-head"
+fi
+
 echo "=== BRANCH ==="
 echo "current=$current"
 echo "base=$base"
 echo "head=$head_sha"
+echo "mode=$mode"
 
 echo
 echo "=== COMMITS ==="
-git log "$base..HEAD" --oneline --no-decorate || true
+if [ "$mode" = "range" ]; then
+  git log "$base..HEAD" --oneline --no-decorate || true
+else
+  git log -1 --oneline --no-decorate HEAD || true
+fi
 
 echo
 echo "=== STAT ==="
-git diff --stat "$base...HEAD" || true
+if [ "$mode" = "range" ]; then
+  git diff --stat "$base...HEAD" || true
+else
+  git show --stat --format= HEAD || true
+fi
 
 echo
 echo "=== FILES ==="
-git diff --name-only "$base...HEAD" || true
+if [ "$mode" = "range" ]; then
+  git diff --name-only "$base...HEAD" || true
+else
+  git show --name-only --format= HEAD || true
+fi
 
 echo
 echo "=== PR ==="

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>T-05 Walkthrough — Agent loop + Harness/Session API</title>
+<title>Walkthrough — Agent loop + Harness/Session API</title>
 <style>
   :root {
     --bg: #0e1117;
@@ -196,7 +196,6 @@
       </div>
     </header>
 
-    <!-- 1 -->
     <section class="story-section" id="context">
       <span class="section-tag">Where we were</span>
       <h2>The starting point</h2>
@@ -223,7 +222,6 @@
       </div>
     </section>
 
-    <!-- 2 -->
     <section class="story-section" id="scope">
       <span class="section-tag">What changed</span>
       <h2>What this PR sets out to do</h2>
@@ -248,7 +246,6 @@
       </p>
     </section>
 
-    <!-- 3 -->
     <section class="story-section" id="shape">
       <span class="section-tag">Architecture</span>
       <h2>The shape of the loop</h2>
@@ -313,7 +310,6 @@
       </div>
     </section>
 
-    <!-- 4 -->
     <section class="story-section" id="harness-session">
       <span class="section-tag">Public API</span>
       <h2>Harness vs. Session — the two-layer split</h2>
@@ -359,7 +355,6 @@
       </p>
     </section>
 
-    <!-- 5 -->
     <section class="story-section" id="cache">
       <span class="section-tag">Guardrail G9</span>
       <h2>The tool-result cache</h2>
@@ -394,7 +389,6 @@ def _key(tool_name: str, args: dict[str, Any]) -> str:
       </p>
     </section>
 
-    <!-- 6 -->
     <section class="story-section" id="truncation">
       <span class="section-tag">Guardrail G2</span>
       <h2>Bounded outputs</h2>
@@ -440,7 +434,6 @@ def _key(tool_name: str, args: dict[str, Any]) -> str:
       </div>
     </section>
 
-    <!-- 7 -->
     <section class="story-section" id="pseudo-tools">
       <span class="section-tag">Local control plane</span>
       <h2>Pseudo-tools — dispatched inline, never to the wire</h2>
@@ -477,7 +470,6 @@ def _key(tool_name: str, args: dict[str, Any]) -> str:
       </div>
     </section>
 
-    <!-- 8 -->
     <section class="story-section" id="parallel">
       <span class="section-tag">Guardrail G11</span>
       <h2>Parallel reads — without breaking event order</h2>
@@ -522,7 +514,6 @@ for tc, (raw, cache_hit, errored) in zip(calls, results, strict=True):
       </p>
     </section>
 
-    <!-- 9 -->
     <section class="story-section" id="guardrails">
       <span class="section-tag">Coverage</span>
       <h2>Guardrail status — what's live, what's stubbed, what's deferred</h2>
@@ -551,7 +542,6 @@ for tc, (raw, cache_hit, errored) in zip(calls, results, strict=True):
       </div>
     </section>
 
-    <!-- 10 -->
     <section class="story-section" id="deferred">
       <span class="section-tag">Out of scope, on purpose</span>
       <h2>What was deliberately deferred</h2>
@@ -574,7 +564,6 @@ for tc, (raw, cache_hit, errored) in zip(calls, results, strict=True):
       </p>
     </section>
 
-    <!-- 11 -->
     <section class="story-section" id="tests">
       <span class="section-tag">Verification</span>
       <h2>How it was tested</h2>
@@ -607,7 +596,6 @@ for tc, (raw, cache_hit, errored) in zip(calls, results, strict=True):
       </table>
     </section>
 
-    <!-- 12 -->
     <section class="story-section" id="review">
       <span class="section-tag">For the reviewer</span>
       <h2>Reviewer's checklist</h2>
