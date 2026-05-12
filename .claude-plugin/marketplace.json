@@ -7,7 +7,15 @@
     {
       "name": "ank",
       "source": "./",
-      "description": "ANK Skills — currently: /review-board (story-paced HTML walkthroughs of finished features)."
+      "description": "Small, composable skills for an agentic engineering workflow — building, reviewing, and shipping software with AI coding agents.",
+      "category": "development",
+      "keywords": [
+        "skills",
+        "agentic-workflow",
+        "engineering",
+        "productivity",
+        "tooling"
+      ]
     }
   ]
 }
