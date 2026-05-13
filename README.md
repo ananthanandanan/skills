@@ -30,6 +30,7 @@ Then pick the skills you want from the interactive list.
 
 - [`/review-board`](./skills/engineering/review-board/SKILL.md) — generates a single-file HTML "story-paced walkthrough" of a finished feature for human code review. Sidebar nav, Why/Tradeoff/Deferred callouts, status pills, reviewer's checklist. Use it after finishing a feature or merging a PR, when a teammate needs to understand the *why* and the *shape* of the change, not just the diff.
 - [`/handoff`](./skills/engineering/handoff/SKILL.md) — drops a Markdown handoff doc at `docs/<slug>-handoff.md` distilling the current conversation (agenda, files touched, bugs, fixes, decisions, current state, next steps) so another agent — Claude, Codex, opencode, pi, ampcode, Cursor, or a fresh session — can resume without re-deriving context. Invoke when your context window is nearly full.
+- [`/visualise-plan`](./skills/engineering/visualise-plan/SKILL.md) — produces a single-file HTML implementation plan at `docs/plan/<slug>.html` (Botanical Almanac styling: milestones, data-flow SVG, mockups, files-touched list, key code). Invoke *after* the agent has grilled you with clarifying questions but *before* any code is written — then hard-stops until you reply "approved".
 
 ## Authoring a new skill
 

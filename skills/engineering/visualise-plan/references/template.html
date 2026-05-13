@@ -1,0 +1,599 @@
+<!doctype html>
+<!--
+  IMPLEMENTATION PLAN TEMPLATE — BOTANICAL ALMANAC
+  ================================================
+  Replace placeholders marked with {{...}} and the example content.
+  Keep the visual style. Sections in order:
+    1. Header (project · feature title · prompt)
+    2. Highlight bubbles
+    3. Milestones / Targets
+    4. Data flow (SVG diagram — thick boxes, deliberate, no decoration)
+    5. Mockups (HTML/CSS rendering of the UI)
+    6. Files added / updated / removed
+    7. Key code
+    8. Future scope / open questions
+-->
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{{Feature title}} — Implementation plan</title>
+        <style>
+            :root {
+                --bg: #f5f0e1; /* bone paper */
+                --paper: #fbf8ec; /* card surface, slightly lighter */
+                --ink: #1a2e1f; /* deep forest green — primary ink */
+                --ink-soft: #5a6b5a; /* muted green-gray — secondary text */
+                --accent: #b4541a; /* terracotta — section numbers, emphasis, new modules */
+                --rule: #1a2e1f;
+                --dash: #8a9787;
+                --tag-bg: #ece5d0;
+                --op-add: #2d5938;
+                --op-mod: #856104;
+                --op-del: #8a3320;
+            }
+            * {
+                box-sizing: border-box;
+            }
+            html,
+            body {
+                margin: 0;
+                background: var(--bg);
+                color: var(--ink);
+                font-family:
+                    "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
+                    serif;
+                font-size: 17px;
+                line-height: 1.55;
+            }
+            .page {
+                max-width: 760px;
+                margin: 0 auto;
+                padding: 32px 24px 96px;
+            }
+            .eyebrow {
+                font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+                font-size: 12px;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: var(--ink-soft);
+            }
+            h1 {
+                font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+                font-size: 34px;
+                line-height: 1.15;
+                margin: 8px 0 16px;
+                font-weight: 500;
+                color: var(--ink);
+            }
+            h2 {
+                font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+                font-size: 22px;
+                margin: 0 0 8px;
+                font-weight: 500;
+                color: var(--ink);
+            }
+            h3 {
+                font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+                font-size: 16px;
+                margin: 4px 0 6px;
+                font-weight: 500;
+                color: var(--ink);
+            }
+            p {
+                margin: 8px 0;
+            }
+            .prompt {
+                border-left: 2px solid var(--ink);
+                padding: 4px 0 4px 12px;
+                margin: 16px 0 28px;
+                font-style: italic;
+                color: var(--ink-soft);
+                font-size: 15px;
+            }
+            .prompt b {
+                font-style: normal;
+                font-family: ui-monospace, Menlo, monospace;
+                font-size: 12px;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                margin-right: 8px;
+                color: var(--accent);
+            }
+
+            /* 2. HIGHLIGHT BUBBLES */
+            .bubbles {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 10px;
+                margin: 24px 0 40px;
+            }
+            .bubble {
+                background: var(--paper);
+                border: 1.5px solid var(--ink);
+                border-radius: 22px;
+                padding: 12px 16px;
+                box-shadow: 3px 3px 0 var(--ink);
+            }
+            .bubble .label {
+                font-family: ui-monospace, Menlo, monospace;
+                font-size: 11px;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: var(--ink-soft);
+            }
+            .bubble .value {
+                font-family: ui-monospace, Menlo, monospace;
+                font-size: 20px;
+                font-weight: 500;
+                margin-top: 2px;
+                color: var(--ink);
+            }
+
+            /* SECTION */
+            section {
+                margin: 48px 0;
+            }
+            .section-num {
+                font-family: ui-monospace, Menlo, monospace;
+                color: var(--accent);
+                font-size: 12px;
+                letter-spacing: 0.08em;
+            }
+            section > p:first-of-type {
+                color: var(--ink-soft);
+                margin-top: 4px;
+            }
+
+            /* 3. MILESTONES */
+            .milestone {
+                border-top: 1px solid var(--ink);
+                padding: 18px 0 6px;
+            }
+            .milestone .when {
+                font-family: ui-monospace, Menlo, monospace;
+                font-size: 12px;
+                letter-spacing: 0.04em;
+                color: var(--ink-soft);
+            }
+            .tags {
+                margin-top: 8px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            .tag {
+                font-family: ui-monospace, Menlo, monospace;
+                font-size: 11px;
+                background: var(--tag-bg);
+                border: 1px solid var(--ink);
+                padding: 2px 8px;
+                border-radius: 4px;
+                color: var(--ink);
+            }
+
+            /* 4. DATA FLOW */
+            .flow {
+                background: var(--paper);
+                border: 1.5px solid var(--ink);
+                border-radius: 14px;
+                padding: 20px;
+                box-shadow: 3px 3px 0 var(--ink);
+                overflow-x: auto;
+            }
+            .flow svg {
+                width: 100%;
+                height: auto;
+                display: block;
+            }
+            .legend {
+                font-family: ui-monospace, Menlo, monospace;
+                font-size: 12px;
+                color: var(--ink-soft);
+                margin-top: 10px;
+            }
+
+            /* 5. MOCKUPS */
+            .mock {
+                background: var(--paper);
+                border: 1.5px solid var(--ink);
+                border-radius: 14px;
+                padding: 18px;
+                margin: 16px 0;
+                box-shadow: 3px 3px 0 var(--ink);
+            }
+            .mock h3 {
+                margin-bottom: 12px;
+            }
+
+            /* 6. FILES */
+            .files {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .file-row {
+                display: grid;
+                grid-template-columns: 80px 1fr;
+                gap: 12px;
+                align-items: baseline;
+                border-bottom: 1px dashed var(--dash);
+                padding: 8px 0;
+            }
+            .file-op {
+                font-family: ui-monospace, Menlo, monospace;
+                font-size: 11px;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+            }
+            .op-add {
+                color: var(--op-add);
+            }
+            .op-mod {
+                color: var(--op-mod);
+            }
+            .op-del {
+                color: var(--op-del);
+            }
+            .file-path {
+                font-family: ui-monospace, Menlo, monospace;
+                font-size: 14px;
+                color: var(--ink);
+            }
+            .file-note {
+                color: var(--ink-soft);
+                font-size: 14px;
+                margin-top: 2px;
+                display: block;
+            }
+
+            /* 7. CODE */
+            pre.code {
+                background: var(--paper);
+                border: 1.5px solid var(--ink);
+                border-radius: 10px;
+                padding: 14px 16px;
+                overflow-x: auto;
+                font-family: ui-monospace, Menlo, monospace;
+                font-size: 13px;
+                line-height: 1.55;
+                box-shadow: 3px 3px 0 var(--ink);
+                color: var(--ink);
+            }
+            .code-caption {
+                font-family: ui-monospace, Menlo, monospace;
+                font-size: 12px;
+                color: var(--ink-soft);
+                margin: 16px 0 6px;
+            }
+            /* Optional syntax tint — only when it adds clarity */
+            .kw {
+                color: var(--accent);
+            }
+            .fn {
+                color: #2d5938;
+            }
+            .str {
+                color: #856104;
+            }
+
+            /* 8. FUTURE SCOPE */
+            .future-item {
+                border-top: 1px solid var(--ink);
+                padding: 14px 0;
+            }
+            .future-item .meta {
+                font-family: ui-monospace, Menlo, monospace;
+                font-size: 11px;
+                letter-spacing: 0.04em;
+                color: var(--ink-soft);
+                margin-top: 4px;
+            }
+
+            /* SVG defaults — architectural: thick boxes, deliberate, no decoration */
+            .node {
+                fill: var(--paper);
+                stroke: var(--ink);
+                stroke-width: 2.5;
+            }
+            .node-new {
+                fill: var(--paper);
+                stroke: var(--accent);
+                stroke-width: 2.5;
+            }
+            .node-label {
+                font-family: ui-monospace, Menlo, monospace;
+                font-size: 12px;
+                fill: var(--ink);
+            }
+            .node-sub {
+                font-family: ui-monospace, Menlo, monospace;
+                font-size: 10px;
+                fill: var(--ink-soft);
+            }
+            .stroke-solid {
+                stroke: var(--ink);
+                stroke-width: 2;
+                fill: none;
+            }
+            .stroke-dash {
+                stroke: var(--ink);
+                stroke-width: 2;
+                fill: none;
+                stroke-dasharray: 6 5;
+            }
+            .edge-label {
+                font-family: ui-monospace, Menlo, monospace;
+                font-size: 10px;
+                fill: var(--ink-soft);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="page">
+            <div class="eyebrow">Implementation plan · {{Project name}}</div>
+            <h1>{{Feature title}}</h1>
+
+            <div class="prompt">
+                <b>Prompt</b> {{The original request that led to this plan — one
+                paragraph, in the user's voice.}}
+            </div>
+
+            <!-- 2. HIGHLIGHT BUBBLES -->
+            <div class="bubbles">
+                <div class="bubble">
+                    <div class="label">Effort</div>
+                    <div class="value">{{~2 weeks}}</div>
+                </div>
+                <div class="bubble">
+                    <div class="label">Files added</div>
+                    <div class="value">{{7}}</div>
+                </div>
+                <div class="bubble">
+                    <div class="label">Files updated</div>
+                    <div class="value">{{4}}</div>
+                </div>
+                <div class="bubble">
+                    <div class="label">Surfaces touched</div>
+                    <div class="value">{{3 packages}}</div>
+                </div>
+                <div class="bubble">
+                    <div class="label">Feature flag</div>
+                    <div class="value">{{flag_name_v1}}</div>
+                </div>
+            </div>
+
+            <!-- 3. MILESTONES -->
+            <section>
+                <div class="section-num">01</div>
+                <h2>Milestones</h2>
+                <p>
+                    {{One-line strategy: how the work is sliced and what's
+                    user-visible when.}}
+                </p>
+
+                <div class="milestone">
+                    <div class="when">{{Week 1 · Mon–Tue}}</div>
+                    <h3>{{Slice name}}</h3>
+                    <p>
+                        {{What lands in this slice. Be concrete about files and
+                        packages.}}
+                    </p>
+                    <div class="tags">
+                        <span class="tag">{{package/path}}</span>
+                        <span class="tag">{{package/path}}</span>
+                    </div>
+                </div>
+                <!-- Repeat .milestone blocks as needed -->
+            </section>
+
+            <!-- 4. DATA FLOW -->
+            <section>
+                <div class="section-num">02</div>
+                <h2>Data flow</h2>
+                <p>
+                    {{One-line caption. Mention which lines are solid (sync) vs
+                    dashed (async / fire-and-forget).}}
+                </p>
+
+                <div class="flow">
+                    <!--
+        SVG diagram conventions (architectural — thick boxes, no decoration):
+          - viewBox ~ "0 0 720 360"
+          - Existing modules:  class="node"     (ink stroke)
+          - New modules:        class="node-new" (accent stroke)
+          - Box labels:          class="node-label" (mono, 12px, ink)
+          - Box sublabels:    class="node-sub"   (mono, 10px, ink-soft) — package or path
+          - Sync edges:          class="stroke-solid"
+          - Async edges:        class="stroke-dash"
+          - Edge labels:        class="edge-label"
+        Show new modules alongside existing ones so the reviewer sees how it ties together.
+      -->
+                    <svg
+                        viewBox="0 0 720 360"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-label="Data flow diagram"
+                    >
+                        <!-- example new module -->
+                        <rect
+                            class="node-new"
+                            x="20"
+                            y="40"
+                            width="160"
+                            height="60"
+                        />
+                        <text
+                            class="node-label"
+                            x="100"
+                            y="70"
+                            text-anchor="middle"
+                        >
+                            &lt;NewComponent/&gt;
+                        </text>
+                        <text
+                            class="node-sub"
+                            x="100"
+                            y="86"
+                            text-anchor="middle"
+                        >
+                            apps/web
+                        </text>
+
+                        <!-- example existing module -->
+                        <rect
+                            class="node"
+                            x="300"
+                            y="40"
+                            width="160"
+                            height="60"
+                        />
+                        <text
+                            class="node-label"
+                            x="380"
+                            y="70"
+                            text-anchor="middle"
+                        >
+                            existingService
+                        </text>
+                        <text
+                            class="node-sub"
+                            x="380"
+                            y="86"
+                            text-anchor="middle"
+                        >
+                            packages/api
+                        </text>
+
+                        <!-- example sync edge -->
+                        <path
+                            class="stroke-solid"
+                            d="M180 70 L300 70"
+                            marker-end="url(#arrow)"
+                        />
+                        <text
+                            class="edge-label"
+                            x="240"
+                            y="62"
+                            text-anchor="middle"
+                        >
+                            call
+                        </text>
+
+                        <defs>
+                            <marker
+                                id="arrow"
+                                viewBox="0 0 10 10"
+                                refX="9"
+                                refY="5"
+                                markerWidth="6"
+                                markerHeight="6"
+                                orient="auto"
+                            >
+                                <path d="M0,0 L10,5 L0,10 z" fill="#1a2e1f" />
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="legend">
+                    Solid = request/response. Dashed = async / fire-and-forget.
+                    Terracotta border = new module.
+                </div>
+            </section>
+
+            <!-- 5. MOCKUPS -->
+            <section>
+                <div class="section-num">03</div>
+                <h2>Mockups</h2>
+                <p>
+                    {{One line on what the mockups are proving — placement,
+                    hierarchy, empty state. Not pixel-final.}}
+                </p>
+
+                <div class="mock">
+                    <h3>A · {{Mockup name}}</h3>
+                    <div>
+                        {{...mockup markup here — plain HTML/CSS, lo-fi but
+                        recognizable...}}
+                    </div>
+                </div>
+                <!-- More .mock blocks as needed -->
+            </section>
+
+            <!-- 6. FILES -->
+            <section>
+                <div class="section-num">04</div>
+                <h2>Files</h2>
+                <p>{{One line on the shape of the change.}}</p>
+
+                <div class="files">
+                    <div class="file-row">
+                        <span class="file-op op-add">add</span>
+                        <span>
+                            <span class="file-path"
+                                >{{path/to/new-file.ts}}</span
+                            >
+                            <span class="file-note"
+                                >{{Why this file exists and what it
+                                owns.}}</span
+                            >
+                        </span>
+                    </div>
+                    <div class="file-row">
+                        <span class="file-op op-mod">update</span>
+                        <span>
+                            <span class="file-path"
+                                >{{path/to/existing.ts}}</span
+                            >
+                            <span class="file-note"
+                                >{{What changes and why.}}</span
+                            >
+                        </span>
+                    </div>
+                    <div class="file-row">
+                        <span class="file-op op-del">remove</span>
+                        <span>
+                            <span class="file-path"
+                                >{{path/to/dead-code.ts}}</span
+                            >
+                            <span class="file-note"
+                                >{{Why it's no longer needed.}}</span
+                            >
+                        </span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 7. KEY CODE -->
+            <section>
+                <div class="section-num">05</div>
+                <h2>Key code</h2>
+                <p>
+                    {{The 1–3 snippets most likely to be done wrong. Not the
+                    whole feature.}}
+                </p>
+
+                <div class="code-caption">{{path/to/file.ext}}</div>
+                <pre class="code">{{// snippet 1 — the tricky part}}</pre>
+
+                <div class="code-caption">{{path/to/other.ext}}</div>
+                <pre class="code">{{// snippet 2}}</pre>
+            </section>
+
+            <!-- 8. FUTURE SCOPE -->
+            <section>
+                <div class="section-num">06</div>
+                <h2>Future scope</h2>
+                <p>
+                    {{One line on what's deliberately out of scope and what's
+                    worth revisiting.}}
+                </p>
+
+                <div class="future-item">
+                    <h3>{{Question / deferred item}}</h3>
+                    <p>{{What the tradeoff is and what would unlock it.}}</p>
+                    <div class="meta">{{Decide with · who · when}}</div>
+                </div>
+            </section>
+        </div>
+    </body>
+</html>
