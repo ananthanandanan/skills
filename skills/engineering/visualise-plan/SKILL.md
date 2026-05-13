@@ -46,9 +46,11 @@ A row of small rounded chips showing the at-a-glance stats. Pick the ones that a
 Aim for 4–6 bubbles. Anything that takes more than a few words doesn't belong in a bubble — put it in a section.
 
 ### 3. Milestones / Targets
-Slice the work into independently reviewable chunks. For each milestone:
-- A timestamp or order marker ("Week 1 · Mon–Tue", or just "Slice 1")
-- A short title
+Slice the work into independently reviewable chunks, rendered as a **timeline**: left-aligned date column, vertical rail with bullet dots in the middle, content on the right. The first milestone (the foundation slice that's actively about to start) uses a filled green dot; later ones add `class="upcoming"` to the `.milestone` for the terracotta-ring dot.
+
+For each milestone:
+- A timestamp or order marker in `.when` ("Week 1 · Mon–Tue", or just "Slice 1")
+- A short title in `<h3>` inside `.body`
 - 1–2 sentences on what lands and what's user-visible
 - Tag chips for the packages / paths it touches
 
@@ -117,13 +119,15 @@ This is also where you flag any assumption you had to make because the conversat
 
 The template at `references/template.html` is the source of truth for style. The palette and treatment is fixed — do not improvise alternate colors or "modernize" the look:
 
-- **Background** `#f5f0e1` (bone paper) · **panels** `#fbf8ec` (slightly lighter)
+- **Background** `#f5f0e1` (bone paper) · **panels** `#fbf8ec` (slightly lighter) · **prompt panel** `#f1ead5` · **bubbles** `#fff`
 - **Ink** `#1a2e1f` (deep forest green) for all primary text and strokes
 - **Soft ink** `#5a6b5a` (muted green-gray) for secondary text, sublabels, captions
-- **Accent** `#b4541a` (terracotta) — used only for: section numbers (`01`, `02`, …), the `Prompt` label, new-module borders in the data flow, and optional code keyword tint. Don't sprinkle it elsewhere.
-- **Typography**: serif body (`"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif`), monospace for all headings, labels, tags, code, and SVG text (`ui-monospace, "JetBrains Mono", Menlo, monospace`). Heading weight is `500`, not bold — the monospace gives it enough presence.
-- **Panels** (bubbles, flow box, mockup box, code block): 1.5px ink border, 3px solid-offset ink shadow. This "clay" shadow is the signature — keep it.
-- **Section numbers** (`01`, `02`, …) sit above each `h2` in terracotta monospace.
+- **Rule** `#d8cfb4` — thin 1px borders for cards/panels/dividers
+- **Accent** `#b4541a` (terracotta) — used only for: the `Prompt` label, new-module borders in the data flow, upcoming-milestone dot rings, and optional code keyword tint. Don't sprinkle it elsewhere.
+- **Typography**: **serif for all body and headings** (`"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif`). H1 is 40px/600, H2 is 26px/600, H3 is 17px/600 — the serif weight does the work. Monospace (`ui-monospace, "JetBrains Mono", Menlo, monospace`) is reserved for: the eyebrow line, section-number chips, bubble labels/values, file paths, tags, code, SVG text, and `<code>` spans.
+- **Panels** (bubbles, flow box, mockup box, code block, prompt box): flat — 1px `--rule` border, 8–12px radius, **no offset shadow**. The previous "clay shadow" look has been retired in favor of cleaner cards.
+- **Prompt** sits in a `.prompt-box` (soft paper-soft background, rounded) with a small terracotta uppercase "PROMPT" label above the paragraph. Not a left-bar italic quote.
+- **Section numbers** (`01`, `02`, …) render as a small monospace chip with `--tag-bg` background, placed inline next to the `<h2>` via a `.section-head` flex row.
 - **File operation colors**: `add` → `#2d5938` (deep green), `update` → `#856104` (amber), `remove` → `#8a3320` (rust).
 - Mobile-friendly: max-width 760px, single column, viewport meta tag present.
 - **Sentence case** in headings and labels — never Title Case, never ALL CAPS (except the tiny letter-spaced eyebrow lines).
