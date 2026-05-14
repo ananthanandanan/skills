@@ -8,6 +8,7 @@
   "skills": [
     "./skills/engineering/review-board",
     "./skills/engineering/handoff",
-    "./skills/engineering/visualise-plan"
+    "./skills/engineering/visualise-plan",
+    "./skills/engineering/third-degree"
   ]
 }
