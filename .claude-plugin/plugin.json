@@ -9,6 +9,8 @@
     "./skills/engineering/review-board",
     "./skills/engineering/handoff",
     "./skills/engineering/visualise-plan",
-    "./skills/engineering/third-degree"
+    "./skills/engineering/third-degree",
+    "./skills/engineering/spec",
+    "./skills/engineering/tasks"
   ]
 }
