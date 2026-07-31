@@ -24,6 +24,28 @@ npx skills@latest add ananthanandanan/skills
 
 Then pick the skills you want from the interactive list.
 
+## Staying up to date
+
+I push new skills and revise existing ones. Neither install path auto-updates — you have to pull changes in.
+
+**Plugin install** — refresh the marketplace catalog, then update the plugin:
+
+```bash
+# In Claude Code:
+/plugin marketplace update ank-skills
+/plugin update ank@ank-skills
+```
+
+The first command re-reads this repo's catalog so newly added skills are visible; the second pulls the updated skill files. Running `/plugin` on its own opens the manager UI if you'd rather browse than type. New skills show up as `/ank:<skill>` right away — restart Claude Code if one doesn't appear.
+
+**`npx skills` install** — re-run the installer and reselect:
+
+```bash
+npx skills@latest add ananthanandanan/skills
+```
+
+This overwrites the skill directories it manages, so local edits you've made to those files will be lost. Fork instead if you're customising.
+
 ## Skills
 
 ### Engineering
