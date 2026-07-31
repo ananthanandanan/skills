@@ -35,6 +35,10 @@ Then pick the skills you want from the interactive list.
 - [`/tasks`](./skills/engineering/tasks/SKILL.md) — turns an approved `SPEC.md` into `TASKS.md` (phases, parallel tracks, sized tasks, dependency map), then creates matching GitHub issues, a Project board, and empty-directory scaffolding from the spec's package layout. Confirms before any `gh` side-effect; degrades gracefully when `gh` is missing — it writes `TASKS.md` and asks you to `gh auth login` then re-run.
 - [`/visualise-plan`](./skills/engineering/visualise-plan/SKILL.md) — produces a single-file HTML implementation plan at `docs/plan/<slug>.html` (Botanical Almanac styling: milestones, data-flow SVG, mockups, files-touched list, key code). Use for *feature-level* planning when you want a visual artifact to review before writing code. Hard-stops until you reply "approved".
 
+### Productivity
+
+- [`/no-yap`](./skills/productivity/no-yap/SKILL.md) — answers in ASD-STE100 Simplified Technical English (the numbered-clause, one-idea-per-sentence style of an aircraft maintenance manual) instead of a wall of prose. Numbered sections with functional titles, ~20-word sentences, active voice, one word/one meaning, `RESULT:` and `WARNING:` on their own lines. Domain terms of art are never simplified — it compresses the language, not the subject — so it works as well on an enzyme pathway or a hydraulic failure as on a race condition. Chat-only, no file written; the style sticks for follow-ups until you ask for normal prose.
+
 ## Authoring a new skill
 
 Add a directory under `skills/<category>/<name>/` with a `SKILL.md` (YAML frontmatter must include `name` and `description` — CI enforces this), then append the path to the `skills` array in `.claude-plugin/plugin.json`. The `review-board` skill is the reference layout.
