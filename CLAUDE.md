@@ -4,7 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-A collection of Claude Code skills (branded **ANK Skills**). Plugin name: **`ank`**. The first and currently only skill is `/review-board`, which generates a single-file HTML "story-paced walkthrough" of a finished feature for human code review.
+A collection of Claude Code skills (branded **ANK Skills**). Plugin name: **`ank`**.
+
+Most of them form one pipeline — `/third-degree` (interview) → `/spec` (SPEC.md) → `/tasks` (TASKS.md + GitHub issues) → `/visualise-plan` (pre-code HTML plan) → `/review-board` (post-feature HTML walkthrough) — with `/handoff` for dumping context when a window fills up. `/review-board` is the reference implementation and the most opinionated about output.
+
+`/no-yap` sits outside that pipeline. It's a response-style skill: it makes Claude answer in ASD-STE100 Simplified Technical English (numbered clauses, one idea per sentence) instead of prose. It produces no file and is not tied to a codebase — it's for any expert domain, not just software.
 
 There was an original `build_plan.md` that scaffolded the repo; it has been removed. This file is now the source of truth for layout, constraints, and decisions.
 
@@ -27,7 +31,7 @@ skills/<category>/<name>/
   └── scripts/                             # helper shell scripts the SKILL.md invokes
 ```
 
-Categories use buckets like `engineering/`, `productivity/`, etc. `/review-board` lives at `skills/engineering/review-board/`.
+Categories use buckets like `engineering/`, `productivity/`, etc. `/review-board` lives at `skills/engineering/review-board/`; `/no-yap` lives at `skills/productivity/no-yap/`. A skill that changes how Claude *answers* belongs in `productivity/`; one that produces a project artifact belongs in `engineering/`.
 
 The `skills/<category>/<name>/` convention is required for `npx skills` compatibility. Don't flatten it.
 
@@ -42,6 +46,13 @@ skills/engineering/review-board/examples/walkthrough-example.html
 This file is the gold standard (originally Reigner T-05). The model opens it at runtime, copies the `<style>` block and scroll-spy `<script>` **verbatim** into new walkthroughs, and pattern-matches the structure, callout density, and section arc. The example's *content* is T-05-specific — only the *shape* carries over. There is no separate template; the example *is* the template.
 
 The CSS classes are load-bearing: callout types (`why` / `tradeoff` / `deferred`), status pills (`good` / `warn` / `bad` / `accent`), sticky sidebar, scroll-spy. Don't rename them.
+
+## Hard constraints for `/no-yap` output
+
+- Chat-only. It never writes a file and never offers to.
+- Simplify the *language*, never the *subject*. Domain terms of art (`ECONNRESET`, `CYP3A4`, `p < 0.05`) are exempt from the plain-language rules — paraphrasing a precise term into an approachable one is the failure mode.
+- Domain-agnostic by design. Don't let edits drift it back toward software-only phrasing; the two worked examples in `SKILL.md` (one code, one pharmacology) exist to hold that line.
+- Terseness makes wrong claims look authoritative, so the grounding rule is stricter than elsewhere: verify before asserting, and never fabricate a path, figure, dosage, date, or citation.
 
 ## Hard constraints for `/review-board` output
 
@@ -90,4 +101,4 @@ npx skills@latest add <gh-handle>/<repo>
 
 ## Deliberately out of scope
 
-No second skill until there's a real use case. No theming options. No own npm package. No docs site. No telemetry. Resist scope creep.
+New skills only when there's a real, recurring use case — not because a category looks empty. No theming options. No own npm package. No docs site. No telemetry. Resist scope creep.
