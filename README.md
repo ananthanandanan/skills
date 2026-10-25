@@ -60,6 +60,7 @@ This overwrites the skill directories it manages, so local edits you've made to 
 ### Productivity
 
 - [`/no-yap`](./skills/productivity/no-yap/SKILL.md) — answers in ASD-STE100 Simplified Technical English (the numbered-clause, one-idea-per-sentence style of an aircraft maintenance manual) instead of a wall of prose. Numbered sections with functional titles, ~20-word sentences, active voice, one word/one meaning, `RESULT:` and `WARNING:` on their own lines. Domain terms of art are never simplified — it compresses the language, not the subject — so it works as well on an enzyme pathway or a hydraulic failure as on a race condition. Chat-only, no file written; the style sticks for follow-ups until you ask for normal prose.
+- [`/expert-writing`](./skills/productivity/expert-writing/SKILL.md) — rewrites a draft you already have (blog post, Slack message, architecture idea, README) into tighter, more technical writing in your own voice. Picks list vs paragraph per block based on the scenario, strips em dashes, curly quotes, and AI-slop vocabulary, and treats "more technical" as more substance (mechanism, trade-offs, failure modes) rather than more words. Gaps it can't ground get a visible `[TODO]` instead of an invented number. Returns the rewrite in chat, or edits the file in place when given a path.
 
 ## Authoring a new skill
 
