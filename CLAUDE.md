@@ -31,7 +31,7 @@ skills/<category>/<name>/
   └── scripts/                             # helper shell scripts the SKILL.md invokes
 ```
 
-Categories use buckets like `engineering/`, `productivity/`, etc. `/review-board` lives at `skills/engineering/review-board/`; `/no-yap` lives at `skills/productivity/no-yap/`; `/expert-writing` (rewrites a user's draft into precise technical prose with a banned-word list) lives at `skills/productivity/expert-writing/`. A skill that changes how Claude *answers* belongs in `productivity/`; one that produces a project artifact belongs in `engineering/`.
+Categories use buckets like `engineering/`, `productivity/`, etc. `/review-board` lives at `skills/engineering/review-board/`; `/no-yap` lives at `skills/productivity/no-yap/`; `/expert-writing` (rewrites a user's draft into precise technical prose with a banned-word list) lives at `skills/productivity/expert-writing/`. `/enhance-instructions` (audits and prunes a repo's CLAUDE.md / AGENTS.md, adding only rules from its `references/rule-library.md`) lives at `skills/engineering/enhance-instructions/`. A skill that changes how Claude *answers* belongs in `productivity/`; one that produces a project artifact belongs in `engineering/`.
 
 The `skills/<category>/<name>/` convention is required for `npx skills` compatibility. Don't flatten it.
 
