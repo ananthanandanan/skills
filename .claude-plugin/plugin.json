@@ -1,7 +1,7 @@
 {
   "name": "ank",
   "description": "ANK Skills — small, composable Claude Code skills for an agentic engineering workflow.",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "author": {
     "name": "K N Anantha Nandanan"
   },

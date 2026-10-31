@@ -20,7 +20,7 @@ Make the file **shorter and sharper**. Agents follow these files and pay for eve
 ## 1. Find and read
 
 - Find root `AGENTS.md` and `CLAUDE.md`, then `.claude/rules/`, `CLAUDE.local.md`, and nested copies. Touch nested files only to report contradictions.
-- If both root files overlap, propose `AGENTS.md` as the main file and `CLAUDE.md` reduced to `@AGENTS.md`. If neither exists, propose that pair.
+- If both root files exist, they get the same content. Audit their combined lines once, and plan and apply one result to both. Never reduce one to an `@` import or pointer to the other. If one is a symlink to the other (`ls -l`), edit the target only. If neither exists, propose creating both with the same content.
 - Read the repo signals: lockfiles, manifests, `package.json` scripts, `Makefile`, CI workflows (CI commands beat README commands), generated or vendored paths, and existing hooks in `.claude/settings.json`.
 
 ## 2. Audit every line
@@ -51,6 +51,6 @@ Every item needs a short reason. A group with more than three items goes one ite
 
 ## 5. Apply
 
-Edit in place and keep the user's structure. Put added rules in one flat list under `## Working rules`, and put facts under `## Commands` and `## Don't touch`, or under existing sections like them. No intro, no summary, no citations, and never the library's **Why** text. Don't install hooks unless asked. Report the line counts and the changes in chat.
+Edit in place and keep the user's structure. With both root files, write the same final content to each. Put added rules in one flat list under `## Working rules`, and put facts under `## Commands` and `## Don't touch`, or under existing sections like them. No intro, no summary, no citations, and never the library's **Why** text. Don't install hooks unless asked. Report the line counts and the changes in chat.
 
 Running the skill again on its own output should give "no changes" or close to it.
